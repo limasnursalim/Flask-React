@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import uuid
 
 app = Flask(__name__)
 CORS(app)
@@ -46,15 +47,7 @@ users = {
 
 @app.route('/users', methods=['GET','POST'])
 def get_users():
-    # # accessing the value of parameter 'name'
-    # search_username = request.args.get('name')
-    # if search_username:
-    #     subdict = {'users_list': []}
-    #     for user in users['users_list']:
-    #         if user['name'] == search_username:
-    #             subdict['users_list'].append(user)
-    #     return subdict
-    # return users
+    # accessing the value of parameter 'name'
     if request.method == 'GET':
         search_username = request.args.get('name')
         search_job = request.args.get('job')
@@ -74,8 +67,10 @@ def get_users():
         return users
     elif request.method == 'POST':
         userToAdd = request.get_json()
+        userToAdd["id"] = str(uuid.uuid4())
         users['users_list'].append(userToAdd)
-        resp = jsonify(success=True)
+        resp = jsonify(userToAdd)
+        resp.status_code = 201
         # resp.status_code = 200 #optionally, you can always set a response code.
         # 200 is the default code for a normal response
         return resp
@@ -87,7 +82,13 @@ def get_user(id):
             for user in users['users_list']:
                 if user['id'] == id:
                     users['users_list'].remove(user)
-                    return users
+                    resp = jsonify(success=True)
+                    resp.status_code = 204
+                    return resp
+            # else
+            resp = jsonify(success=False)
+            resp.status_code = 404
+            return resp
     if request.method == 'GET':
         if id:
             for user in users['users_list']:
